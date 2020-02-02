@@ -1,12 +1,9 @@
 package com.example.quiz;
 
 import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
 
-import android.content.Context;
 import android.content.DialogInterface;
 import android.media.AudioAttributes;
-import android.media.AudioManager;
 import android.media.SoundPool;
 import android.os.Bundle;
 import android.os.Handler;
@@ -31,19 +28,23 @@ https://codeforfun.jp/android-studio-quiz-game-1/
  */
 public class MainActivity extends RobotActivity implements RobotLifecycleCallbacks {
 
+    private QiContext qiContext;
+
     private Button answerBtn1;
     private Button answerBtn2;
     private Button answerBtn3;
     private Button answerBtn4;
+    private TextView countLabel;
+
     private int correctSound = 0;
     private int wrongSound = 0;
     private SoundPool soundPool;
-    private QiContext qiContext;
-    private TextView countLabel;
+
     private int quizCount = 0;
     private HashMap<String, String> quiz;
-
     static private int QUIZ_COUNT;
+    int correctCount = 0;
+
     private Handler handler;
     private Future<Void> future;
 
@@ -53,6 +54,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         setContentView(R.layout.activity_main);
         QiSDK.register(this,this);
 
+        // 配列の長さの分
         QUIZ_COUNT = Answer.getAnswers().length;
 
         handler = new Handler();
@@ -95,7 +97,6 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
 
         countLabel = findViewById(R.id.countLabel);
 
-
     }
 
     @Override
@@ -105,33 +106,27 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
     }
 
     public void showNextQuiz() {
-        Log.d("debug","showNextQuiz");
-        // クイズカウントラベルを更新
         countLabel.setText("Q." + String.valueOf(quizCount + 1));
 
         quiz = Answer.getAnser(quizCount);
 
-        Log.d("debug","showNextQuiz countLabel = " + countLabel);
-
-        // 回答ボタンに正解と選択肢３つを表示
+        // 回答ボタンに選択肢4つを表示
         answerBtn1.setText(quiz.get("1"));
         answerBtn2.setText(quiz.get("2"));
         answerBtn3.setText(quiz.get("3"));
         answerBtn4.setText(quiz.get("4"));
         String statement = quiz.get("statement");
         pepperSay(statement);
-        Log.d("debug","showNextQuiz End");
     }
 
-
-    //btnが押されたらcheckAnswerを呼ぶ
+    // btnが押されたらcheckAnswerが呼ばれる
     public void checkAnswer(View view) {
         if(correctSound == 0 || wrongSound == 0) return;
 
         Button answerBtn = findViewById(view.getId());
         String btnText = answerBtn.getText().toString();
 
-        //答え
+        // 答えと説明
         String explanation = quiz.get("explanation");
         String correct = quiz.get("correct");
         Log.d("debug","correct" + correct);
@@ -139,6 +134,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         if (btnText.equals(correct)) {
             soundPool.play(correctSound,1.0f, 1.0f, 0, 0, 1);
             Message = "正解!";
+            correctCount++;
         } else {
             soundPool.play(wrongSound,1.0f, 1.0f, 0, 0, 1);
             Message = "不正解…";
@@ -146,6 +142,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
 
         pepperSay(Message + explanation);
 
+        // ダイアログを表示
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setMessage(explanation);
         builder.setTitle(Message);
@@ -153,10 +150,13 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
+                // まだ表示できるクイズがあるなら
                 if (quizCount < QUIZ_COUNT-1) {
                     quizCount++;
                     showNextQuiz();
-                } else {
+                }
+                // 最後は集計画面が作れるといいかも
+                else {
 
                 }
             }
@@ -182,7 +182,6 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
     public void onRobotFocusGained(QiContext qiContext) {
         this.qiContext = qiContext;
         Log.d("debug","onRobotFocus");
-
         // RobotFocusを取らないと喋らないのでここで
         //　しかしsetTextはUIスレッド上でないといけないので
         new Thread(new Runnable() {
