@@ -35,7 +35,7 @@ public class Answer {
             answer1
     };
 
-    public static HashMap<String, String> getAnser(int number) {
+    public static HashMap<String, String> getAnswer(int number) {
         return answers[number];
     }
     public static HashMap<String, String>[] getAnswers( ) { return answers; }

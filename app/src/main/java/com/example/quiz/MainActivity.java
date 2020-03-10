@@ -108,7 +108,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
     public void showNextQuiz() {
         countLabel.setText("Q." + String.valueOf(quizCount + 1));
 
-        quiz = Answer.getAnser(quizCount);
+        quiz = Answer.getAnswer(quizCount);
 
         // 回答ボタンに選択肢4つを表示
         answerBtn1.setText(quiz.get("1"));
